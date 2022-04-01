@@ -1,0 +1,14 @@
+<RCC>
+  <qresource prefix="newPrefix">
+    <file>speaker-icon-15.png</file>
+    <file>screen-3.webp</file>
+    <file>R (2).png</file>
+    <file>front-Horizontal-1.png</file>
+    <file>play-icon-11-256.png</file>
+    <file>pause-icon-11-256.png</file>
+    <file>play-icon-11-256.png</file>
+    <file>R (1).png</file>
+    <file>guitar-icon-png-7.png</file>
+    <file>orange-piano-icon.png</file>
+  </qresource>
+</RCC>
