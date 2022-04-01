@@ -18,6 +18,7 @@ import pysynth as toypiano
 import soundfile as sf
 import sounddevice as sd
 import os
+from PyQt5.QtWidgets import QFileDialog
 #import pyaudio
 import numpy as np
 from scipy import signal
@@ -2445,19 +2446,9 @@ class Ui_MainWindow(object):
         self.tabWidget.addTab(self.instruments, icon10, "")
         self.gridLayout_4.addWidget(self.tabWidget, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 984, 28))
-        self.menubar.setObjectName("menubar")
-        self.menuLoad = QtWidgets.QMenu(self.menubar)
-        self.menuLoad.setTearOffEnabled(False)
-        self.menuLoad.setSeparatorsCollapsible(False)
-        self.menuLoad.setToolTipsVisible(False)
-        self.menuLoad.setObjectName("menuLoad")
-        MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.menubar.addAction(self.menuLoad.menuAction())
         self.retranslateUi(MainWindow)
         self.tabWidget.setCurrentIndex(1)
         self.tabWidget_2.setCurrentIndex(1)
@@ -2570,9 +2561,9 @@ class Ui_MainWindow(object):
     def BrowseFiles(self):
         global signal
         global fname
-        fname=r"C:\Users\dania\Downloads\Lana Del Rey - California.wav"
-        self.data, self.samplerate=sf.read(fname)
-        raw = wave.open(fname)
+        fname=QFileDialog.getOpenFileName(None, str("Browse Files"), None, str("Audio Files (*.wav)"))
+        self.data, self.samplerate=sf.read(fname[0])
+        raw = wave.open(fname[0])
         signal = raw.readframes(-1)
         signal = np.frombuffer(signal, dtype ="int16")
         self.frame_rate = raw.getframerate()
@@ -2594,16 +2585,16 @@ class Ui_MainWindow(object):
     def update_plot(self):   
         self.MainGraph_widget.clear()
         self.MainGraph_widget.setYRange(np.min(signal),np.max(signal))
-        # if self.k == 0 :
-        #    self.MainGraph_widget.setXRange(0, self.scaling_factor)
-        # elif self.k >= self.frame_rate/10:
-        #     self.MainGraph_widget.setXRange(self.scaling_factor_i, self.scaling_factor)
-        #     self.scaling_factor = self.scaling_factor + self.frame_rate 
-        #     self.scaling_factor_i = self.scaling_factor_i + self.frame_rate
-        # elif self.size > 0:
-        #     self.MainGraph_widget.setXRange((self.int + self.size) , (self.fin +self.size))
+        if self.k == 0 :
+            self.MainGraph_widget.setXRange(0, self.scaling_factor)
+        elif self.k >= 10000:
+            self.MainGraph_widget.setXRange(self.scaling_factor_i, self.scaling_factor)
+            self.scaling_factor = self.scaling_factor + 4410 
+            self.scaling_factor_i = self.scaling_factor_i + 4410
+        elif self.size > 0:
+            self.MainGraph_widget.setXRange((self.int + self.size) , (self.fin +self.size))
        
-        self.plt = self.MainGraph_widget.plot(x_axis_final[0:self.k], y_axis_final[0:self.k])
+        self.plt = self.MainGraph_widget.plot(x_axis_final[0:self.k], y_axis_final[0:self.k], pen=(255,140,0))
         self.k = self.k + 4410
         if self.k > np.max(x_axis_final):
             self.timer.stop()
@@ -2623,6 +2614,7 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Virtual Instruments and Equalizer"))
+        MainWindow.setWindowIcon(QtGui.QIcon('orange-piano-icon.png'))
         self.Spectrogram_groupBox.setTitle(_translate("MainWindow", "Spectrogram"))
         self.Frequency_groupBox.setTitle(_translate("MainWindow", "Frequency Range"))
         self.MainGraph_groupBox.setTitle(_translate("MainWindow", "Music File Graph"))
@@ -2656,7 +2648,6 @@ class Ui_MainWindow(object):
         self.pushButton.setText(_translate("MainWindow", "Generate"))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab), _translate("MainWindow", "Synthesizer"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.instruments), _translate("MainWindow", "Instruments"))
-        self.menuLoad.setTitle(_translate("MainWindow", "Load"))
 from pyqtgraph import PlotWidget
 import logo_rc
 
