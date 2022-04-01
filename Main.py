@@ -18,6 +18,8 @@ import pysynth as toypiano
 import soundfile as sf
 import sounddevice as sd
 import os
+import simpleaudio as sa
+import time
 from PyQt5.QtWidgets import QFileDialog
 #import pyaudio
 import numpy as np
@@ -2025,6 +2027,7 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "")
+        self.paused=False
         self.NoteIndex = 0
         self.strings=['e2','a2','d3','g3','b3','e4']
         self.pianonotenames=['c','c#','d','d#','e','f','f#','g','g#','a','a#','b','c5','c#5','d5','d#5','e5','f5','f#5','g5','g#5','a5','a#5','b5','c6']
@@ -2152,7 +2155,6 @@ class Ui_MainWindow(object):
         icon.addPixmap(QtGui.QPixmap("Places-folder-orange-icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.Browse_pushbutton.setIcon(icon)
         self.Browse_pushbutton.setObjectName("Browse_pushbutton")
-        self.Browse_pushbutton.clicked.connect(self.BrowseFiles)
         self.gridLayout_5.addWidget(self.Browse_pushbutton, 4, 0, 1, 3)
         self.Play_pushButton = QtWidgets.QPushButton(self.groupBox_4)
         icon1 = QtGui.QIcon()
@@ -2161,7 +2163,6 @@ class Ui_MainWindow(object):
         self.Play_pushButton.setCheckable(False)
         self.Play_pushButton.setFlat(False)
         self.Play_pushButton.setObjectName("Play_pushButton")
-        self.Play_pushButton.clicked.connect(self.Play)
         self.gridLayout_5.addWidget(self.Play_pushButton, 0, 0, 1, 1)
         self.label_6 = QtWidgets.QLabel(self.groupBox_4)
         self.label_6.setStyleSheet("image: url(:/newPrefix/speaker-icon-15.png);")
@@ -2181,7 +2182,6 @@ class Ui_MainWindow(object):
         self.Pause_pushButton.setIcon(icon3)
         self.Pause_pushButton.setFlat(False)
         self.Pause_pushButton.setObjectName("Pause_pushButton")
-        self.Pause_pushButton.clicked.connect(self.Pause)
         self.gridLayout_5.addWidget(self.Pause_pushButton, 0, 1, 1, 1)
         self.gridLayout_3.addWidget(self.groupBox_4, 2, 0, 1, 1)
         icon4 = QtGui.QIcon()
@@ -2506,6 +2506,12 @@ class Ui_MainWindow(object):
         ########################## Bongo Connections ############################
         self.Drums_pushbutton1.clicked.connect(lambda: self.BongoPlayer(0))
         self.Drums_pushButton2.clicked.connect(lambda: self.BongoPlayer(1))
+        ########################## EQ Connections ############################
+        self.Browse_pushbutton.clicked.connect(self.BrowseFiles)
+        self.Play_pushButton.clicked.connect(self.Play)
+        self.Pause_pushButton.clicked.connect(self.Pause)
+        self.Stop_pushButton.clicked.connect(self.Stop)
+
 
     def SetIndex(self, Gindex):
         self.NoteIndex = Gindex
@@ -2563,6 +2569,8 @@ class Ui_MainWindow(object):
         global fname
         fname=QFileDialog.getOpenFileName(None, str("Browse Files"), None, str("Audio Files (*.wav)"))
         self.data, self.samplerate=sf.read(fname[0])
+        global wavobj
+        wavobj = sa.WaveObject.from_wave_file(fname[0])
         raw = wave.open(fname[0])
         signal = raw.readframes(-1)
         signal = np.frombuffer(signal, dtype ="int16")
@@ -2605,11 +2613,23 @@ class Ui_MainWindow(object):
 
     def Pause(self):
         self.timer.stop()
-        sd.stop()
+        #sd.stop()
+        play_obj.pause()
+        self.paused=True
 
-    
     def Play(self):
-        sd.play(self.data,self.samplerate)
+        #sd.play(self.data,self.samplerate)
+        global play_obj
+        if self.paused==True:
+            play_obj.resume()
+            self.paused=False
+        else:
+            play_obj = wavobj.play()
+            self.paused=False
+
+    def Stop(self):
+        play_obj.stop()
+        self.paused=False
  
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
