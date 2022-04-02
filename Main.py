@@ -28,6 +28,8 @@ from PyQt5.QtWidgets import QFileDialog
 import numpy as np
 from scipy import signal
 import atexit
+
+from sympy import false
 def exit_handler():
         os.remove(r'CurrentNote.wav')
 atexit.register(exit_handler)
@@ -36,13 +38,7 @@ atexit.register(exit_handler)
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         self.timer=QtCore.QTimer()
-        self.int=0
-        self.scaling_factor= 1000
-        self.scaling_factor_i= 0
-        self.k = 0
-        self.zoom = 1
-        self.fin = 700
-        self.size=0
+        
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(984, 591)
         MainWindow.setStyleSheet("/*Copyright (c) DevSec Studio. All rights reserved.\n"
@@ -2595,35 +2591,40 @@ class Ui_MainWindow(object):
         global y_axis_final
         x_axis=np.array(time)
         x_axis=x_axis.flatten()
-        x_axis_final=np.arange(1,len(x_axis)+1,1)
+        x_axis_final=np.arange(1,len(x_axis),1)
         y_axis=np.array(signal)
         y_axis_final=y_axis.flatten()
-        self.update_plot()
-        self.timer.setInterval(100)
-        self.timer.timeout.connect(self.update_plot)
-        self.timer.start()
+        self.paused= False
         self.Play()
        
     def update_plot(self):   
-        self.MainGraph_widget.clear()
         self.MainGraph_widget.setYRange(np.min(signal),np.max(signal))
-        if self.k == 0 :
+        if self.counter == 0 :
             self.MainGraph_widget.setXRange(0, self.scaling_factor)
-        elif self.k >= 10000:
+        elif self.counter >= 10000:
             self.MainGraph_widget.setXRange(self.scaling_factor_i, self.scaling_factor)
             self.scaling_factor = self.scaling_factor + 4410 
             self.scaling_factor_i = self.scaling_factor_i + 4410
         elif self.size > 0:
             self.MainGraph_widget.setXRange((self.int + self.size) , (self.fin +self.size))
        
-        self.plt = self.MainGraph_widget.plot(x_axis_final[0:self.k], y_axis_final[0:self.k], pen=(255,140,0))
-        self.k = self.k + 4410
-        if self.k > np.max(x_axis_final):
+        self.plt = self.MainGraph_widget.plot(x_axis_final[0:self.counter], y_axis_final[0:self.counter], pen=(255,140,0))
+        self.counter = self.counter + 4410
+        if self.counter > np.max(x_axis_final):
             self.timer.stop()
-            self.k= 0
+            self.counter= 0
             # self.scaling_factor = 600
             # self.scaling_factor_i= 0
             # self.zoom = 1
+    
+    def Initialize(self):
+        self.int=0
+        self.scaling_factor= 1000
+        self.scaling_factor_i= 0
+        self.counter = 0
+        self.zoom = 1
+        self.fin = 700
+        self.size=0
 
     def Pause(self):
         self.timer.stop()
@@ -2639,6 +2640,12 @@ class Ui_MainWindow(object):
             self.timer.start()
             self.paused=False
         else:
+            self.Initialize()
+            self.MainGraph_widget.clear()
+            self.update_plot()
+            self.timer.setInterval(100)
+            self.timer.timeout.connect(self.update_plot)
+            self.timer.start()
             play_obj = wavobj.play()
             self.paused=False
 
