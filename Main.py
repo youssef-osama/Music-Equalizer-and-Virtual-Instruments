@@ -2035,6 +2035,9 @@ class Ui_MainWindow(object):
         self.paused=False
         self.NoteIndex = 0
         self.strings=['e2','a2','d3','g3','b3','e4']
+        self.dropDstrings=['d2','a2','d3','g3','b3','e4']
+        self.BluesTuning=['d2','g2','d3','g3','b3','d4']
+        self.Tunings=[self.strings, self.dropDstrings, self.BluesTuning]
         self.pianonotenames=['c','c#','d','d#','e','f','f#','g','g#','a','a#','b','c5','c#5','d5','d#5','e5','f5','f#5','g5','g#5','a5','a#5','b5','c6']
         self.notefreqs=[130.81,138.59,146.83,155.56,164.81,174.61,185.00,196.00,207.65,220.00,233.08,246.94]
         self.octavemultiplier=[1, 2, 3]
@@ -2236,6 +2239,9 @@ class Ui_MainWindow(object):
         self.PianoTypeCombo.addItem("")
         self.PianoTypeCombo.addItem("")
         self.PianoTypeCombo.addItem("")
+        self.PianoSustain= QtWidgets.QCheckBox(self.tab_2)
+        self.PianoSustain.setGeometry(QtCore.QRect(460, 90, 201, 22))
+        self.PianoSustain.setText("Sustain")
         self.C2_pushbutton = QtWidgets.QPushButton(self.tab_2)
         self.C2_pushbutton.setGeometry(QtCore.QRect(40, 290, 92, 81))
         self.C2_pushbutton.setMinimumSize(QtCore.QSize(92, 0))
@@ -2343,6 +2349,17 @@ class Ui_MainWindow(object):
         self.label_3.setStyleSheet("image: url(:/newPrefix/front-Horizontal-1.png);")
         self.label_3.setText("")
         self.label_3.setObjectName("label_3")
+        self.LetRingCheckBox = QtWidgets.QCheckBox(self.tab_3)
+        self.LetRingCheckBox.setGeometry(QtCore.QRect(530,120,81,20))
+        self.LetRingCheckBox.setText('Let Ring')
+        self.TuningLabel = QtWidgets.QLabel(self.tab_3)
+        self.TuningLabel.setText('Tuning:')
+        self.TuningLabel.setGeometry(QtCore.QRect(770, 130, 55, 16))
+        self.TuningCombo = QtWidgets.QComboBox(self.tab_3)
+        self.TuningCombo.setGeometry(QtCore.QRect(730, 190, 121, 22))
+        self.TuningCombo.addItem("")
+        self.TuningCombo.addItem("")
+        self.TuningCombo.addItem("")
         self.GuitarE_pushbutton = QtWidgets.QPushButton(self.tab_3)
         self.GuitarE_pushbutton.setGeometry(QtCore.QRect(220, 170, 92, 16))
         self.GuitarE_pushbutton.setMinimumSize(QtCore.QSize(92, 0))
@@ -2472,9 +2489,9 @@ class Ui_MainWindow(object):
         self.GuitarA_pushbutton.clicked.connect(self.PlayGuitarNote)
         self.GuitarD_pushButton.clicked.connect(lambda: self.SetIndex(2))
         self.GuitarD_pushButton.clicked.connect(self.PlayGuitarNote)
-        self.GuitarG_pushButton.clicked.connect(lambda: self.SetIndex(3))
+        self.GuitarG_pushButton.clicked.connect(lambda: self.SetIndex(4))
         self.GuitarG_pushButton.clicked.connect(self.PlayGuitarNote)
-        self.GuitarB_pushbutton.clicked.connect(lambda: self.SetIndex(4))
+        self.GuitarB_pushbutton.clicked.connect(lambda: self.SetIndex(3))
         self.GuitarB_pushbutton.clicked.connect(self.PlayGuitarNote)
         #########################   PIANO CONNECTIONS   #######################
         self.C2_pushbutton.clicked.connect(lambda: self.SetIndex(0))
@@ -2529,6 +2546,7 @@ class Ui_MainWindow(object):
         self.Volume_horizontalSlider.valueChanged.connect(self.ChangeSystemVolume)
         
     def Spectrogram(self):
+        self.Spectrogram_widget.clear()
         ################## DATA NEEDS REVISION #################
         ################## THIS IS NOT FINAL   #################
         # it doesn't look like a normal spectrogram khales
@@ -2570,15 +2588,28 @@ class Ui_MainWindow(object):
         self.NoteIndex = Gindex
 
     def PlayGuitarNote(self):
-        CurrentNote = ((self.strings[self.NoteIndex],4),)
+        LetRing = self.LetRingCheckBox.isChecked()
+        global NoteLength
+        if LetRing:
+            NoteLength = 1
+        else:
+            NoteLength = 4
+        CurrentTuning = self.Tunings[self.TuningCombo.currentIndex()]
+        CurrentNote = ((CurrentTuning[self.NoteIndex],NoteLength),)
         guitar.make_wav(CurrentNote, fn = r"CurrentNote.wav")
         filename = r'CurrentNote.wav'
         data, fs = sf.read(filename, dtype='float32')  
         sd.play(data, fs)
     
     def PlayPianoNote(self):
+        SustainOn = self.PianoSustain.isChecked()
+        global NoteLength
+        if SustainOn:
+            NoteLength = 1
+        else:
+            NoteLength = 4
         PianoType=self.PianoTypeCombo.currentIndex()
-        CurrentNote = ((self.pianonotenames[self.NoteIndex],4),)
+        CurrentNote = ((self.pianonotenames[self.NoteIndex],NoteLength),)
         if PianoType == 0:
             epiano.make_wav(CurrentNote, fn = r"CurrentNote.wav")
         elif PianoType == 1:
@@ -2739,6 +2770,9 @@ class Ui_MainWindow(object):
         self.comboBox_2.setItemText(0, _translate("MainWindow", "3rd Octave"))
         self.comboBox_2.setItemText(1, _translate("MainWindow", "4th Octave"))
         self.comboBox_2.setItemText(2, _translate("MainWindow", "5th Octave"))
+        self.TuningCombo.setItemText(0, _translate("MainWindow", "Standard"))
+        self.TuningCombo.setItemText(1, _translate("MainWindow", "Drop D"))
+        self.TuningCombo.setItemText(2, _translate("MainWindow", "G Blues"))
         self.pushButton.setText(_translate("MainWindow", "Generate"))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab), _translate("MainWindow", "Synthesizer"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.instruments), _translate("MainWindow", "Instruments"))
