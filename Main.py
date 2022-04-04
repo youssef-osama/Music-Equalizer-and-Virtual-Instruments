@@ -28,7 +28,7 @@ import os
 import simpleaudio as sa
 import time
 from PyQt5.QtWidgets import QFileDialog
-#import pyaudio
+import pyaudio
 import numpy as np
 import atexit
 from sympy import false
@@ -2031,6 +2031,14 @@ class Ui_MainWindow(object):
 "\n"
 "")
         
+        self.int=0
+        self.scaling_factor= 4410
+        self.scaling_factor_i= 0
+        self.counter = 0
+        self.zoom = 1
+        self.fin = 700
+        self.size=0
+        self.paused=False
         self.volumearray = np.linspace(-65.25, 0, 100)
         self.paused=False
         self.NoteIndex = 0
@@ -2545,7 +2553,6 @@ class Ui_MainWindow(object):
         self.Volume_horizontalSlider.setValue(currentVolume)
         self.Volume_horizontalSlider.valueChanged.connect(self.ChangeSystemVolume)
         self.signal=np.arange(1,10,1)
-       
         self.new_sig=np.array([5])
         self.frequency_interval=1
         self.frequencies=np.array([5])
@@ -2557,26 +2564,19 @@ class Ui_MainWindow(object):
         self.signal_after_gain = np.array([])
         self.signal_output_1 = np.array([])
         self.gain_sliders(self.Drums_horizontalSlider)
-        self.Drums_horizontalSlider.valueChanged.connect(self.Equalizer(10,250,self.Drums_horizontalSlider.value())) 
+        self.Drums_horizontalSlider.sliderReleased.connect(lambda:self.Equalizer(0,200,self.Drums_horizontalSlider.value()))
         self.gain_sliders(self.Piano_horizontalSlider)
-        self.Piano_horizontalSlider.valueChanged.connect(self.Equalizer(250,1290,self.Piano_horizontalSlider.value())) 
+        self.Piano_horizontalSlider.sliderReleased.connect(lambda:self.Equalizer(250,1290,self.Piano_horizontalSlider.value()))
         self.gain_sliders(self.Guitar_horizontalSlider)
-        self.Guitar_horizontalSlider.valueChanged.connect(self.Equalizer(1290,5190,self.Guitar_horizontalSlider.value()))
-        self.int=0
-        self.scaling_factor= 4410
-        self.scaling_factor_i= 0
-        self.counter = 0
-        self.zoom = 1
-        self.fin = 700
-        self.size=0
-        self.paused=False
+        self.Guitar_horizontalSlider.sliderReleased.connect(lambda:self.Equalizer(1300,5190,self.Guitar_horizontalSlider.value()))
+        
         
     def Spectrogram(self):
         self.Spectrogram_widget.clear()
         ################## DATA NEEDS REVISION #################
         ################## THIS IS NOT FINAL   #################
         # it doesn't look like a normal spectrogram khales
-        f, t, spectrogram = scipy.signal.spectrogram(y_axis_final, self.samplerate)
+        f, t, spectrogram = scipy.signal.spectrogram(self.signal, self.frame_rate)
         p1 = self.Spectrogram_widget.addPlot()
         img = pyqtgraph.ImageItem()
         p1.addItem(img)
@@ -2638,7 +2638,7 @@ class Ui_MainWindow(object):
         noteindex = self.Notes_comboBox.currentIndex()
         octaveindex = self.comboBox_2.currentIndex()
         resultantfrq = self.notefreqs[noteindex]*self.octavemultiplier[octaveindex]
-        #p = pyaudio.PyAudio()
+        p = pyaudio.PyAudio()
         volume = 0.5  
         fs = 44100       
         duration = self.horizontalSlider.value()   
@@ -2647,12 +2647,12 @@ class Ui_MainWindow(object):
         if self.sine.isChecked() == True:
             samples = (np.sin(2*np.pi*np.arange(fs*duration)*resultantfrq/fs)).astype(np.float32)
         else:
-            samples = (self.signal.square(2 * np.pi * np.arange(fs*duration)*resultantfrq/fs)).astype(np.float32)
-        # stream = p.open(format=pyaudio.paFloat32,channels=1,rate=fs,output=True)
-        # stream.write(volume*samples)
-        # stream.stop_stream()
-        # stream.close()
-        # p.terminate()
+            samples = (signal.square(2 * np.pi * np.arange(fs*duration)*resultantfrq/fs)).astype(np.float32)
+        stream = p.open(format=pyaudio.paFloat32,channels=1,rate=fs,output=True)
+        stream.write(volume*samples)
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
     
     def BongoPlayer(self, index):
         global bongodata
@@ -2664,25 +2664,26 @@ class Ui_MainWindow(object):
         sd.play(bongodata, bongofs)
     
     def Equalizer(self,low, high, gain):    
+        self.signal=self.backup
         Num= len(self.signal)
-        self.signal_rfft_Coeff_abs = np.abs(np.fft.rfft(self.signal))
+        self.signal_rfft_Coeff_abs = np.fft.rfft(self.signal)
         self.frequencies = np.fft.rfftfreq(Num, 1 / self.samplerate)
         self.frequency_interval = len(self.frequencies) / (self.samplerate / 2)
         temp=0
         for f in self.frequencies:
             if low < f < high:
                 temp=int(self.frequency_interval * f)
-                self.signal_rfft_Coeff_abs[temp] = self.signal_rfft_Coeff_abs[temp] * gain
+                self.signal_rfft_Coeff_abs[temp] = self.signal_rfft_Coeff_abs[temp] * (gain/1.3)
             else:
                 pass
         print(self.new_sig)
         print(np.fft.irfft(self.signal_rfft_Coeff_abs))
-        #self.new_sig = np.fft.irfft(self.signal_rfft_Coeff_abs[0])
+        self.new_sig = np.fft.irfft(self.signal_rfft_Coeff_abs)
+        self.signal=np.int16(self.new_sig)
 
         self.update_plot()
 
     def gain_sliders(self , Slider ) :
-        
         Slider.setSingleStep(1)
         Slider.setValue(1)
         Slider.setMinimum(0)
@@ -2693,12 +2694,12 @@ class Ui_MainWindow(object):
         
         global file_name
         file_name=QFileDialog.getOpenFileName(None, str("Browse Files"), None, str("Audio Files (*.wav)"))
-        
-        global wave_object
-        wave_object = sa.WaveObject.from_wave_file(file_name[0])
+        #global wave_object
+        #wave_object = sa.WaveObject.from_wave_file(file_name[0])
         raw = wave.open(file_name[0])
         self.signal = raw.readframes(-1)
         self.signal = np.frombuffer(self.signal, dtype ="int16")
+        self.backup = self.signal
         self.frame_rate = raw.getframerate()
         print(self.frame_rate)
         time = np.linspace( 0,len(self.signal) / self.frame_rate,num = len(self.signal))
@@ -2717,7 +2718,7 @@ class Ui_MainWindow(object):
         self.MainGraph_widget.setYRange(np.min(self.signal),np.max(self.signal))
         if self.counter == 0 :
             self.MainGraph_widget.setXRange(0, self.scaling_factor)
-        elif self.counter >= 10000:
+        elif self.counter >= 4410:
             self.MainGraph_widget.setXRange(self.scaling_factor_i, self.scaling_factor)
             self.scaling_factor = self.scaling_factor + 4410 
             self.scaling_factor_i = self.scaling_factor_i + 4410
@@ -2738,10 +2739,12 @@ class Ui_MainWindow(object):
         self.fin = 700
         self.size=0
         self.paused=False
+        self.seeker=0
 
     def Pause(self):
         self.timer.stop()
-        play_object.pause()
+        #play_object.pause()
+        sd.stop()
         self.paused=True
         self.isplayed=False
 
@@ -2751,7 +2754,8 @@ class Ui_MainWindow(object):
             return
         else:
             if self.paused==True:
-                play_object.resume()
+                #play_object.resume()
+                sd.play(self.signal[self.seeker:-1])
                 self.timer.start()
                 self.isplayed=True
                 self.paused=False
@@ -2762,14 +2766,22 @@ class Ui_MainWindow(object):
                 self.update_plot()
                 self.timer.setInterval(100)
                 self.timer.timeout.connect(self.update_plot)
+                self.timer.timeout.connect(self.seek)
                 self.timer.start()
-                play_object = wave_object.play()
+                sd.play(self.signal[self.seeker:-1])
+                #play_object = wave_object.play()
                 self.Spectrogram()
 
+    def seek(self):
+        self.seeker=int(self.seeker+(self.frame_rate/10))
+        print(self.seeker)
+    
     def Stop(self):
         self.timer.stop()
         self.MainGraph_widget.clear()
-        play_object.stop()
+        #play_object.stop()
+        sd.stop()
+        self.seeker=0
         self.paused=False
         self.isplayed=False
  
