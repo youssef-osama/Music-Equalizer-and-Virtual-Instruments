@@ -30,7 +30,6 @@ import time
 from PyQt5.QtWidgets import QFileDialog
 #import pyaudio
 import numpy as np
-from scipy import signal
 import atexit
 from sympy import false
 import pyqtgraph
@@ -2545,6 +2544,32 @@ class Ui_MainWindow(object):
         currentVolume = round(volume.GetMasterVolumeLevelScalar()*100)
         self.Volume_horizontalSlider.setValue(currentVolume)
         self.Volume_horizontalSlider.valueChanged.connect(self.ChangeSystemVolume)
+        self.signal=np.arange(1,10,1)
+       
+        self.new_sig=np.array([5])
+        self.frequency_interval=1
+        self.frequencies=np.array([5])
+        self.signal_rfft_Coeff_abs=np.array([5])
+        self.total_ts_sec=0
+        self.samplerate=44100
+        self.data=()
+        self.signal_after_gain_1 = np.array([])
+        self.signal_after_gain = np.array([])
+        self.signal_output_1 = np.array([])
+        self.gain_sliders(self.Drums_horizontalSlider)
+        self.Drums_horizontalSlider.valueChanged.connect(self.Equalizer(10,250,self.Drums_horizontalSlider.value())) 
+        self.gain_sliders(self.Piano_horizontalSlider)
+        self.Piano_horizontalSlider.valueChanged.connect(self.Equalizer(250,1290,self.Piano_horizontalSlider.value())) 
+        self.gain_sliders(self.Guitar_horizontalSlider)
+        self.Guitar_horizontalSlider.valueChanged.connect(self.Equalizer(1290,5190,self.Guitar_horizontalSlider.value()))
+        self.int=0
+        self.scaling_factor= 4410
+        self.scaling_factor_i= 0
+        self.counter = 0
+        self.zoom = 1
+        self.fin = 700
+        self.size=0
+        self.paused=False
         
     def Spectrogram(self):
         self.Spectrogram_widget.clear()
@@ -2622,7 +2647,7 @@ class Ui_MainWindow(object):
         if self.sine.isChecked() == True:
             samples = (np.sin(2*np.pi*np.arange(fs*duration)*resultantfrq/fs)).astype(np.float32)
         else:
-            samples = (signal.square(2 * np.pi * np.arange(fs*duration)*resultantfrq/fs)).astype(np.float32)
+            samples = (self.signal.square(2 * np.pi * np.arange(fs*duration)*resultantfrq/fs)).astype(np.float32)
         # stream = p.open(format=pyaudio.paFloat32,channels=1,rate=fs,output=True)
         # stream.write(volume*samples)
         # stream.stop_stream()
@@ -2637,33 +2662,59 @@ class Ui_MainWindow(object):
         else:
             bongodata, bongofs = sf.read(self.bongo2, dtype='float32')
         sd.play(bongodata, bongofs)
+    
+    def Equalizer(self,low, high, gain):    
+        Num= len(self.signal)
+        self.signal_rfft_Coeff_abs = np.abs(np.fft.rfft(self.signal))
+        self.frequencies = np.fft.rfftfreq(Num, 1 / self.samplerate)
+        self.frequency_interval = len(self.frequencies) / (self.samplerate / 2)
+        temp=0
+        for f in self.frequencies:
+            if low < f < high:
+                temp=int(self.frequency_interval * f)
+                self.signal_rfft_Coeff_abs[temp] = self.signal_rfft_Coeff_abs[temp] * gain
+            else:
+                pass
+        print(self.new_sig)
+        print(np.fft.irfft(self.signal_rfft_Coeff_abs))
+        #self.new_sig = np.fft.irfft(self.signal_rfft_Coeff_abs[0])
+
+        self.update_plot()
+
+    def gain_sliders(self , Slider ) :
+        
+        Slider.setSingleStep(1)
+        Slider.setValue(1)
+        Slider.setMinimum(0)
+        Slider.setMaximum(10)
+        return Slider.value()
 
     def BrowseFiles(self):
-        global signal
+        
         global file_name
         file_name=QFileDialog.getOpenFileName(None, str("Browse Files"), None, str("Audio Files (*.wav)"))
-        self.data, self.samplerate=sf.read(file_name[0])
+        
         global wave_object
         wave_object = sa.WaveObject.from_wave_file(file_name[0])
         raw = wave.open(file_name[0])
-        signal = raw.readframes(-1)
-        signal = np.frombuffer(signal, dtype ="int16")
+        self.signal = raw.readframes(-1)
+        self.signal = np.frombuffer(self.signal, dtype ="int16")
         self.frame_rate = raw.getframerate()
         print(self.frame_rate)
-        time = np.linspace( 0,len(signal) / self.frame_rate,num = len(signal))
+        time = np.linspace( 0,len(self.signal) / self.frame_rate,num = len(self.signal))
         global x_axis_final
         global y_axis_final
         x_axis=np.array(time)
         x_axis=x_axis.flatten()
         x_axis_final=np.arange(1,len(x_axis),1)
-        y_axis=np.array(signal)
+        y_axis=np.array(self.signal)
         y_axis_final=y_axis.flatten()
         self.paused= False
         self.isplayed=False
         self.Play()
        
     def update_plot(self):  
-        self.MainGraph_widget.setYRange(np.min(signal),np.max(signal))
+        self.MainGraph_widget.setYRange(np.min(self.signal),np.max(self.signal))
         if self.counter == 0 :
             self.MainGraph_widget.setXRange(0, self.scaling_factor)
         elif self.counter >= 10000:
