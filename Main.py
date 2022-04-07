@@ -9,6 +9,7 @@
 
 from ast import Break
 import wave
+import matplotlib
 from matplotlib.axis import YAxis
 from scipy import signal
 from ctypes import cast, POINTER
@@ -17,6 +18,7 @@ from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 from fileinput import filename
 from msilib.schema import RadioButton
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtGui import QIcon, QPixmap
 import pysynth_s as guitar
 import pysynth_e as epiano
 import pysynth_b as grandpiano
@@ -33,9 +35,11 @@ import numpy as np
 import atexit
 from sympy import false
 import pyqtgraph
+import matplotlib.pyplot as plot
 
 def exit_handler():
         os.remove(r'CurrentNote.wav')
+        os.remove(r'TempSpec.png')
 atexit.register(exit_handler)
 
 
@@ -2073,8 +2077,8 @@ class Ui_MainWindow(object):
         self.Spectrogram_groupBox.setObjectName("Spectrogram_groupBox")
         self.gridLayout_7 = QtWidgets.QGridLayout(self.Spectrogram_groupBox)
         self.gridLayout_7.setObjectName("gridLayout_7")
-        self.Spectrogram_widget = pyqtgraph.GraphicsLayoutWidget(self.Spectrogram_groupBox)
-        self.Spectrogram_widget.setObjectName("Spectrogram_widget")
+        self.Spectrogram_widget = pyqtgraph.PlotWidget(self.Spectrogram_groupBox)
+        # self.Spectrogram_widget.setObjectName("Spectrogram_widget")
         self.gridLayout_7.addWidget(self.Spectrogram_widget, 0, 0, 1, 1)
         self.gridLayout_3.addWidget(self.Spectrogram_groupBox, 0, 1, 1, 1)
         self.Frequency_groupBox = QtWidgets.QGroupBox(self.Music)
@@ -2546,12 +2550,12 @@ class Ui_MainWindow(object):
         self.Play_pushButton.clicked.connect(self.Play)
         self.Pause_pushButton.clicked.connect(self.Pause)
         self.Stop_pushButton.clicked.connect(self.Stop)
-        devices = AudioUtilities.GetSpeakers()
-        interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-        volume = cast(interface, POINTER(IAudioEndpointVolume))
-        currentVolume = round(volume.GetMasterVolumeLevelScalar()*100)
-        self.Volume_horizontalSlider.setValue(currentVolume)
-        self.Volume_horizontalSlider.valueChanged.connect(self.ChangeSystemVolume)
+        # devices = AudioUtilities.GetSpeakers()
+        # interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        # volume = cast(interface, POINTER(IAudioEndpointVolume))
+        # currentVolume = round(volume.GetMasterVolumeLevelScalar()*100)
+        # self.Volume_horizontalSlider.setValue(currentVolume)
+        # self.Volume_horizontalSlider.valueChanged.connect(self.ChangeSystemVolume)
         self.signal=np.arange(1,10,1)
         self.new_sig=np.array([5])
         self.frequency_interval=1
@@ -2564,40 +2568,32 @@ class Ui_MainWindow(object):
         self.signal_after_gain = np.array([])
         self.signal_output_1 = np.array([])
         self.gain_sliders(self.Drums_horizontalSlider)
-        self.Drums_horizontalSlider.sliderReleased.connect(lambda:self.Equalizer(0,200,self.Drums_horizontalSlider.value()))
+        self.Drums_horizontalSlider.sliderReleased.connect(lambda:self.Equalizer(10,200,self.Drums_horizontalSlider.value()))
         self.gain_sliders(self.Piano_horizontalSlider)
         self.Piano_horizontalSlider.sliderReleased.connect(lambda:self.Equalizer(250,1290,self.Piano_horizontalSlider.value()))
         self.gain_sliders(self.Guitar_horizontalSlider)
         self.Guitar_horizontalSlider.sliderReleased.connect(lambda:self.Equalizer(1300,5190,self.Guitar_horizontalSlider.value()))
-        
+        self.Volume_horizontalSlider.sliderReleased.connect(self.SeekbarSetter)
+
+      
         
     def Spectrogram(self):
         self.Spectrogram_widget.clear()
-        ################## DATA NEEDS REVISION #################
-        ################## THIS IS NOT FINAL   #################
-        # it doesn't look like a normal spectrogram khales
-        f, t, spectrogram = scipy.signal.spectrogram(self.signal, self.frame_rate)
-        p1 = self.Spectrogram_widget.addPlot()
-        img = pyqtgraph.ImageItem()
-        p1.addItem(img)
-        hist = pyqtgraph.HistogramLUTItem()
-        hist.setImageItem(img)
-        ################## MAGMA COLOR PALETTE #################
-        hist.gradient.restoreState({'mode': 'rgb',
-            'ticks': [(0.5, (203,71,120, 255)),
-                    (1.0, (241,245,36, 255)),
-                    (0.0, (27,23,141, 255))]})
-        self.Spectrogram_widget.addItem(hist)
-        hist.setLevels(np.min(spectrogram), np.max(spectrogram))
-        img.setImage(spectrogram)
-        # SETTING SCALE AND LIMITS
-        img.scale(t[-1]/np.size(spectrogram, axis=1), f[-1]/np.size(spectrogram, axis=0))
-        p1.setLimits(xMin=0, xMax=t[-1], yMin=0, yMax=f[-1])
-        # SETTING LABELS
-        p1.setLabel('bottom', "Time", units='s')
-        p1.setLabel('left', "Frequency", units='Hz')
-
-
+        plot.subplot(212)
+        plot.figure(figsize=(6,3))
+        plot.style.use('dark_background')
+        plot.specgram(self.signal, Fs=self.frame_rate)
+        plot.xlabel('Time')
+        plot.ylabel('Frequency')
+        plot.axis('off')
+        plot.savefig(r'TempSpec.png')
+        # self.Spectrogram_widget.getPlotItem().hideAxis('bottom')
+        # self.Spectrogram_widget.getPlotItem().hideAxis('left')
+        self.Spectrogram_widget.setXRange(75, 540)
+        img = pyqtgraph.QtGui.QGraphicsPixmapItem(pyqtgraph.QtGui.QPixmap(r'TempSpec.png'))
+        img.scale(1,-1)
+        self.Spectrogram_widget.addItem(img)
+    
     def SetIndex(self, Gindex):
         self.NoteIndex = Gindex
 
@@ -2639,7 +2635,7 @@ class Ui_MainWindow(object):
         octaveindex = self.comboBox_2.currentIndex()
         resultantfrq = self.notefreqs[noteindex]*self.octavemultiplier[octaveindex]
         p = pyaudio.PyAudio()
-        volume = 0.5  
+        volume = 1
         fs = 44100       
         duration = self.horizontalSlider.value()   
         global samples
@@ -2680,8 +2676,8 @@ class Ui_MainWindow(object):
         print(np.fft.irfft(self.signal_rfft_Coeff_abs))
         self.new_sig = np.fft.irfft(self.signal_rfft_Coeff_abs)
         self.signal=np.int16(self.new_sig)
-
-        self.update_plot()
+        self.Spectrogram()
+        #self.update_plot()
 
     def gain_sliders(self , Slider ) :
         Slider.setSingleStep(1)
@@ -2701,7 +2697,8 @@ class Ui_MainWindow(object):
         self.signal = np.frombuffer(self.signal, dtype ="int16")
         self.backup = self.signal
         self.frame_rate = raw.getframerate()
-        print(self.frame_rate)
+        #print(self.frame_rate)
+        print(len(self.signal))
         time = np.linspace( 0,len(self.signal) / self.frame_rate,num = len(self.signal))
         global x_axis_final
         global y_axis_final
@@ -2716,6 +2713,7 @@ class Ui_MainWindow(object):
        
     def update_plot(self):  
         self.MainGraph_widget.setYRange(np.min(self.signal),np.max(self.signal))
+        self.MainGraph_widget.clear()
         if self.counter == 0 :
             self.MainGraph_widget.setXRange(0, self.scaling_factor)
         elif self.counter >= 4410:
@@ -2735,9 +2733,9 @@ class Ui_MainWindow(object):
         self.scaling_factor= 4410
         self.scaling_factor_i= 0
         self.counter = 0
-        self.zoom = 1
-        self.fin = 700
-        self.size=0
+        # self.zoom = 1
+        # self.fin = 700
+        # self.size=0
         self.paused=False
         self.seeker=0
 
@@ -2755,7 +2753,7 @@ class Ui_MainWindow(object):
         else:
             if self.paused==True:
                 #play_object.resume()
-                sd.play(self.signal[self.seeker:-1])
+                sd.play(self.signal[self.seeker:-1], self.frame_rate)
                 self.timer.start()
                 self.isplayed=True
                 self.paused=False
@@ -2767,30 +2765,42 @@ class Ui_MainWindow(object):
                 self.timer.setInterval(100)
                 self.timer.timeout.connect(self.update_plot)
                 self.timer.timeout.connect(self.seek)
+                #self.timer.timeout.connect(self.Seekbar)
                 self.timer.start()
-                sd.play(self.signal[self.seeker:-1])
+                sd.play(self.signal[self.seeker:-1], self.frame_rate)
                 #play_object = wave_object.play()
                 self.Spectrogram()
 
     def seek(self):
         self.seeker=int(self.seeker+(self.frame_rate/10))
-        print(self.seeker)
     
     def Stop(self):
         self.timer.stop()
         self.MainGraph_widget.clear()
+        self.Spectrogram_widget.clear()
         #play_object.stop()
         sd.stop()
         self.seeker=0
         self.paused=False
         self.isplayed=False
- 
-    def ChangeSystemVolume(self):
-        Slider = int(self.Volume_horizontalSlider.value())
-        devices2 = AudioUtilities.GetSpeakers()
-        interface2 = devices2.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-        volume2 = cast(interface2, POINTER(IAudioEndpointVolume))
-        volume2.SetMasterVolumeLevel(self.volumearray[Slider], None)
+
+    # def Seekbar(self):
+    #     self.currentlocation = int(self.seeker/len(self.signal))
+    #     #print(self.currentlocation)
+    #     self.Volume_horizontalSlider.setValue(self.currentlocation)
+    
+    def SeekbarSetter(self):
+        self.location = self.Volume_horizontalSlider.value()
+        print(self.location)
+        if self.paused:
+            self.seeker = int((self.location*len(self.signal))/100)
+
+    # def ChangeSystemVolume(self):
+    #     Slider = int(self.Volume_horizontalSlider.value())
+    #     devices2 = AudioUtilities.GetSpeakers()
+    #     interface2 = devices2.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+    #     volume2 = cast(interface2, POINTER(IAudioEndpointVolume))
+    #     volume2.SetMasterVolumeLevel(self.volumearray[Slider], None)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
