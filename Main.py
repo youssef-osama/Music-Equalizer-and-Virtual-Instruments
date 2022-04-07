@@ -27,7 +27,7 @@ import scipy
 import soundfile as sf
 import sounddevice as sd
 import os
-import simpleaudio as sa
+#import simpleaudio as sa
 import time
 from PyQt5.QtWidgets import QFileDialog
 import pyaudio
@@ -2555,7 +2555,7 @@ class Ui_MainWindow(object):
         # volume = cast(interface, POINTER(IAudioEndpointVolume))
         # currentVolume = round(volume.GetMasterVolumeLevelScalar()*100)
         # self.Volume_horizontalSlider.setValue(currentVolume)
-        # self.Volume_horizontalSlider.valueChanged.connect(self.ChangeSystemVolume)
+        self.Volume_horizontalSlider.valueChanged.connect(self.ChangeSystemVolume)
         self.signal=np.arange(1,10,1)
         self.new_sig=np.array([5])
         self.frequency_interval=1
@@ -2573,7 +2573,8 @@ class Ui_MainWindow(object):
         self.Piano_horizontalSlider.sliderReleased.connect(lambda:self.Equalizer(250,1290,self.Piano_horizontalSlider.value()))
         self.gain_sliders(self.Guitar_horizontalSlider)
         self.Guitar_horizontalSlider.sliderReleased.connect(lambda:self.Equalizer(1300,5190,self.Guitar_horizontalSlider.value()))
-        self.Volume_horizontalSlider.sliderReleased.connect(self.SeekbarSetter)
+        #self.Volume_horizontalSlider.sliderReleased.connect(self.SeekbarSetter)
+        self.Volume_horizontalSlider.setMaximum(99)
 
       
         
@@ -2660,7 +2661,8 @@ class Ui_MainWindow(object):
         sd.play(bongodata, bongofs)
     
     def Equalizer(self,low, high, gain):    
-        self.signal=self.backup
+        if self.Drums_horizontalSlider.value() == 1 & self.Guitar_horizontalSlider.value() == 1 & self.Piano_horizontalSlider.value() == 1: 
+            self.signal=self.backup
         Num= len(self.signal)
         self.signal_rfft_Coeff_abs = np.fft.rfft(self.signal)
         self.frequencies = np.fft.rfftfreq(Num, 1 / self.samplerate)
@@ -2677,7 +2679,6 @@ class Ui_MainWindow(object):
         self.new_sig = np.fft.irfft(self.signal_rfft_Coeff_abs)
         self.signal=np.int16(self.new_sig)
         self.Spectrogram()
-        #self.update_plot()
 
     def gain_sliders(self , Slider ) :
         Slider.setSingleStep(1)
@@ -2761,7 +2762,6 @@ class Ui_MainWindow(object):
                 self.Initialize()
                 self.isplayed=True
                 self.MainGraph_widget.clear()
-                self.update_plot()
                 self.timer.setInterval(100)
                 self.timer.timeout.connect(self.update_plot)
                 self.timer.timeout.connect(self.seek)
@@ -2789,18 +2789,18 @@ class Ui_MainWindow(object):
     #     #print(self.currentlocation)
     #     self.Volume_horizontalSlider.setValue(self.currentlocation)
     
-    def SeekbarSetter(self):
-        self.location = self.Volume_horizontalSlider.value()
-        print(self.location)
-        if self.paused:
-            self.seeker = int((self.location*len(self.signal))/100)
+    # def SeekbarSetter(self):
+    #     self.location = self.Volume_horizontalSlider.value()
+    #     print(self.location)
+    #     if self.paused:
+    #         self.seeker = int((self.location*len(self.signal))/100)
 
-    # def ChangeSystemVolume(self):
-    #     Slider = int(self.Volume_horizontalSlider.value())
-    #     devices2 = AudioUtilities.GetSpeakers()
-    #     interface2 = devices2.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-    #     volume2 = cast(interface2, POINTER(IAudioEndpointVolume))
-    #     volume2.SetMasterVolumeLevel(self.volumearray[Slider], None)
+    def ChangeSystemVolume(self):
+        Slider = int(self.Volume_horizontalSlider.value())
+        devices2 = AudioUtilities.GetSpeakers()
+        interface2 = devices2.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        volume2 = cast(interface2, POINTER(IAudioEndpointVolume))
+        volume2.SetMasterVolumeLevel(self.volumearray[Slider], None)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
