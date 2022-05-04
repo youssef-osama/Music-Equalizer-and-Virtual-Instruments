@@ -2592,11 +2592,18 @@ class Ui_MainWindow(object):
             self.Guitar_NoteLength = 1
         else:
             self.Guitar_NoteLength = 4
-        
+
         if self.SustainOn:
             self.Piano_NoteLength = 1
         else:
             self.Piano_NoteLength = 4
+
+
+
+    def Read_and_Play(self):
+        filename = r'CurrentNote.wav'
+        data, fs = sf.read(filename, dtype='float32')  
+        sd.play(data, fs)
 
 
     def PlayGuitarNote(self):
@@ -2604,9 +2611,7 @@ class Ui_MainWindow(object):
         CurrentTuning = self.Tunings[self.TuningCombo.currentIndex()]
         CurrentNote = ((CurrentTuning[self.NoteIndex],self.Guitar_NoteLength),)
         guitar.make_wav(CurrentNote, fn = r"CurrentNote.wav")
-        filename = r'CurrentNote.wav'
-        data, fs = sf.read(filename, dtype='float32')  
-        sd.play(data, fs)
+        self.Read_and_Play()
     
     def PlayPianoNote(self):
         self.Get_NoteLength()
@@ -2618,9 +2623,7 @@ class Ui_MainWindow(object):
             grandpiano.make_wav(CurrentNote, fn = r"CurrentNote.wav")
         else:
             toypiano.make_wav(CurrentNote, fn = r"CurrentNote.wav")
-        filename = r'CurrentNote.wav'
-        data, fs = sf.read(filename, dtype='float32')  
-        sd.play(data, fs)
+        self.Read_and_Play()
 
     def Synthesizer(self):
         noteindex = self.Notes_comboBox.currentIndex()
