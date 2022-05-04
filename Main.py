@@ -2489,11 +2489,6 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         self.horizontalSlider.setMaximum(10)
         self.horizontalSlider.setMinimum(1)
-        # self.Spectrogram_Widget = pyqtgraph.GraphicsLayoutWidget(self.Spectrogram_groupBox)
-        # self.Spectrogram_Widget.setObjectName("Spectrogram_Widget")
-        # self.gridLayout_3 = QtWidgets.QGridLayout(self.Spectrogram_groupBox)
-        # self.gridLayout_3.setObjectName("gridLayout_3")
-        # self.gridLayout_3.addWidget(self.Spectrogram_Widget, 0, 0, 1, 3)
         #########################   GUITAR CONNECTIONS   ######################
         self.GuitarE_pushbutton.clicked.connect(lambda: self.SetIndex(0))
         self.GuitarE_pushbutton.clicked.connect(self.PlayGuitarNote)
@@ -2550,11 +2545,6 @@ class Ui_MainWindow(object):
         self.Play_pushButton.clicked.connect(self.Play)
         self.Pause_pushButton.clicked.connect(self.Pause)
         self.Stop_pushButton.clicked.connect(self.Stop)
-        # devices = AudioUtilities.GetSpeakers()
-        # interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-        # volume = cast(interface, POINTER(IAudioEndpointVolume))
-        # currentVolume = round(volume.GetMasterVolumeLevelScalar()*100)
-        # self.Volume_horizontalSlider.setValue(currentVolume)
         self.Volume_horizontalSlider.valueChanged.connect(self.ChangeSystemVolume)
         self.signal=np.arange(1,10,1)
         self.new_sig=np.array([5])
@@ -2573,7 +2563,6 @@ class Ui_MainWindow(object):
         self.Piano_horizontalSlider.sliderReleased.connect(lambda:self.Equalizer(250,1290,self.Piano_horizontalSlider.value()))
         self.gain_sliders(self.Guitar_horizontalSlider)
         self.Guitar_horizontalSlider.sliderReleased.connect(lambda:self.Equalizer(1300,5190,self.Guitar_horizontalSlider.value()))
-        #self.Volume_horizontalSlider.sliderReleased.connect(self.SeekbarSetter)
         self.Volume_horizontalSlider.setMaximum(99)
 
       
@@ -2588,8 +2577,6 @@ class Ui_MainWindow(object):
         plot.ylabel('Frequency')
         plot.axis('off')
         plot.savefig(r'TempSpec.png')
-        # self.Spectrogram_widget.getPlotItem().hideAxis('bottom')
-        # self.Spectrogram_widget.getPlotItem().hideAxis('left')
         self.Spectrogram_widget.setXRange(75, 540)
         img = pyqtgraph.QtGui.QGraphicsPixmapItem(pyqtgraph.QtGui.QPixmap(r'TempSpec.png'))
         img.scale(1,-1)
@@ -2597,30 +2584,34 @@ class Ui_MainWindow(object):
     
     def SetIndex(self, Gindex):
         self.NoteIndex = Gindex
+        
+    def Get_NoteLength(self):
+        self.LetRing = self.LetRingCheckBox.isChecked()
+        self.SustainOn = self.PianoSustain.isChecked()
+        if self.LetRing:
+            self.Guitar_NoteLength = 1
+        else:
+            self.Guitar_NoteLength = 4
+        
+        if self.SustainOn:
+            self.Piano_NoteLength = 1
+        else:
+            self.Piano_NoteLength = 4
+
 
     def PlayGuitarNote(self):
-        LetRing = self.LetRingCheckBox.isChecked()
-        global NoteLength
-        if LetRing:
-            NoteLength = 1
-        else:
-            NoteLength = 4
+        self.Get_NoteLength()
         CurrentTuning = self.Tunings[self.TuningCombo.currentIndex()]
-        CurrentNote = ((CurrentTuning[self.NoteIndex],NoteLength),)
+        CurrentNote = ((CurrentTuning[self.NoteIndex],self.Guitar_NoteLength),)
         guitar.make_wav(CurrentNote, fn = r"CurrentNote.wav")
         filename = r'CurrentNote.wav'
         data, fs = sf.read(filename, dtype='float32')  
         sd.play(data, fs)
     
     def PlayPianoNote(self):
-        SustainOn = self.PianoSustain.isChecked()
-        global NoteLength
-        if SustainOn:
-            NoteLength = 1
-        else:
-            NoteLength = 4
+        self.Get_NoteLength()
         PianoType=self.PianoTypeCombo.currentIndex()
-        CurrentNote = ((self.pianonotenames[self.NoteIndex],NoteLength),)
+        CurrentNote = ((self.pianonotenames[self.NoteIndex],self.Piano_NoteLength),)
         if PianoType == 0:
             epiano.make_wav(CurrentNote, fn = r"CurrentNote.wav")
         elif PianoType == 1:
@@ -2691,14 +2682,11 @@ class Ui_MainWindow(object):
         
         global file_name
         file_name=QFileDialog.getOpenFileName(None, str("Browse Files"), None, str("Audio Files (*.wav)"))
-        #global wave_object
-        #wave_object = sa.WaveObject.from_wave_file(file_name[0])
         raw = wave.open(file_name[0])
         self.signal = raw.readframes(-1)
         self.signal = np.frombuffer(self.signal, dtype ="int16")
         self.backup = self.signal
         self.frame_rate = raw.getframerate()
-        #print(self.frame_rate)
         print(len(self.signal))
         time = np.linspace( 0,len(self.signal) / self.frame_rate,num = len(self.signal))
         global x_axis_final
@@ -2734,15 +2722,11 @@ class Ui_MainWindow(object):
         self.scaling_factor= 4410
         self.scaling_factor_i= 0
         self.counter = 0
-        # self.zoom = 1
-        # self.fin = 700
-        # self.size=0
         self.paused=False
         self.seeker=0
 
     def Pause(self):
         self.timer.stop()
-        #play_object.pause()
         sd.stop()
         self.paused=True
         self.isplayed=False
@@ -2753,7 +2737,6 @@ class Ui_MainWindow(object):
             return
         else:
             if self.paused==True:
-                #play_object.resume()
                 sd.play(self.signal[self.seeker:-1], self.frame_rate)
                 self.timer.start()
                 self.isplayed=True
@@ -2765,10 +2748,8 @@ class Ui_MainWindow(object):
                 self.timer.setInterval(100)
                 self.timer.timeout.connect(self.update_plot)
                 self.timer.timeout.connect(self.seek)
-                #self.timer.timeout.connect(self.Seekbar)
                 self.timer.start()
                 sd.play(self.signal[self.seeker:-1], self.frame_rate)
-                #play_object = wave_object.play()
                 self.Spectrogram()
 
     def seek(self):
@@ -2778,7 +2759,6 @@ class Ui_MainWindow(object):
         self.timer.stop()
         self.MainGraph_widget.clear()
         self.Spectrogram_widget.clear()
-        #play_object.stop()
         sd.stop()
         self.seeker=0
         self.paused=False
