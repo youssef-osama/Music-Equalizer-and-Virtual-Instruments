@@ -59,7 +59,6 @@ class UI(QMainWindow):
         icon4 = QtGui.QIcon()
         icon4.addPixmap(QtGui.QPixmap("R (3).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.tabWidget.addTab(self.Music, icon4, "Music")
-        
         self.LetRingCheckBox = QtWidgets.QCheckBox(self.tab_3)
         self.LetRingCheckBox.setGeometry(QtCore.QRect(1100,120,70,25))
         self.LetRingCheckBox.setText('Let Ring')
@@ -71,23 +70,12 @@ class UI(QMainWindow):
         self.TuningCombo.addItem("Standard")
         self.TuningCombo.addItem("Drop D")
         self.TuningCombo.addItem("G Blues")
-        #icon5 = QtGui.QIcon()
-        #icon5.addPixmap(QtGui.QPixmap("R (10).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        #self.tabWidget_2.addTab(self.widget, icon5, "")
         icon5 = QtGui.QIcon()
         icon5.addPixmap(QtGui.QPixmap("R (10).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.tabWidget_2.addTab(self.widget, icon5, "Bongos")
-        #self.label_7.setStyleSheet("image: url(:/newPrefix/screen-3.webp);")
-        #self.label_7.setText("")
-        #self.label_7.setPixmap(QtGui.QPixmap(":/newPrefix/screen-3.webp"))
-        #self.label_7.setScaledContents(True)
-        #self.label_7.setObjectName("label_7")
         icon6 = QtGui.QIcon()
         icon6.addPixmap(QtGui.QPixmap("R (8).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.tabWidget_2.addTab(self.tab_2, icon6, "Piano")
-        #self.label_3.setStyleSheet("image: url(:/newPrefix/front-Horizontal-1.png);")
-        #self.label_3.setText("")
-        #self.label_3.setObjectName("label_3")
         icon7 = QtGui.QIcon()
         icon7.addPixmap(QtGui.QPixmap("R (9).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.tabWidget_2.addTab(self.tab_3, icon7, "Guitar")
@@ -101,28 +89,7 @@ class UI(QMainWindow):
         icon10.addPixmap(QtGui.QPixmap("R (4).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.tabWidget.addTab(self.instruments, icon10, "Instruments")
         self.tabWidget_2.addTab(self.tab, icon8, "Synthesizer")
-        self.timer=QtCore.QTimer()
-        self.int=0
-        self.scaling_factor= 4410
-        self.scaling_factor_i= 0
-        self.counter = 0
-        self.zoom = 1
-        self.fin = 700
-        self.size=0
-        self.paused=False
-        self.volumearray = np.linspace(-65.25, 0, 100)
-        self.paused=False
-        self.NoteIndex = 0
-        self.strings=['e2','a2','d3','g3','b3','e4']
-        self.dropDstrings=['d2','a2','d3','g3','b3','e4']
-        self.BluesTuning=['d2','g2','d3','g3','b3','d4']
-        self.Tunings=[self.strings, self.dropDstrings, self.BluesTuning]
-        self.pianonotenames=['c','c#','d','d#','e','f','f#','g','g#','a','a#','b','c5','c#5','d5','d#5','e5','f5','f#5','g5','g#5','a5','a#5','b5','c6']
-        self.notefreqs=[130.81,138.59,146.83,155.56,164.81,174.61,185.00,196.00,207.65,220.00,233.08,246.94]
-        self.octavemultiplier=[1, 2, 3]
-        self.bongo1=r'Bongo1.wav'
-        self.bongo2=r'Bongo2.wav'
-        ##
+        
         self.PianoTypeCombo =QtWidgets.QComboBox(self.tab_2)
         self.PianoTypeCombo.setGeometry(QtCore.QRect(670, 60, 270,40 ))
         self.PianoTypeCombo.addItem("Electric Piano")
@@ -131,9 +98,6 @@ class UI(QMainWindow):
         self.PianoSustain= QtWidgets.QCheckBox(self.tab_2)
         self.PianoSustain.setGeometry(QtCore.QRect(670, 90, 270, 40))
         self.PianoSustain.setText("Sustain")
-        #self.PianoTypeCombo.setItemText(0, _translate("MainWindow", "Electric Piano"))
-        #self.PianoTypeCombo.setItemText(1, _translate("MainWindow", "Grand Piano"))
-        #self.PianoTypeCombo.setItemText(2, _translate("MainWindow", "Toy Piano"))
         self.Notes_comboBox = QtWidgets.QComboBox(self.tab)
         self.Notes_comboBox.setObjectName("Notes_comboBox")
         self.Notes_comboBox.addItem("C")
@@ -212,8 +176,28 @@ class UI(QMainWindow):
         self.Play_pushButton.clicked.connect(self.Play)
         self.Pause_pushButton.clicked.connect(self.Pause)
         self.Stop_pushButton.clicked.connect(self.Stop)
-
         self.Volume_horizontalSlider.valueChanged.connect(self.ChangeSystemVolume)
+        self.timer=QtCore.QTimer()
+        self.int=0
+        self.scaling_factor= 4410
+        self.scaling_factor_i= 0
+        self.counter = 0
+        self.zoom = 1
+        self.fin = 700
+        self.size=0
+        self.paused=False
+        self.volumearray = np.linspace(-65.25, 0, 100)
+        self.paused=False
+        self.NoteIndex = 0
+        self.strings=['e2','a2','d3','g3','b3','e4']
+        self.dropDstrings=['d2','a2','d3','g3','b3','e4']
+        self.BluesTuning=['d2','g2','d3','g3','b3','d4']
+        self.Tunings=[self.strings, self.dropDstrings, self.BluesTuning]
+        self.pianonotenames=['c','c#','d','d#','e','f','f#','g','g#','a','a#','b','c5','c#5','d5','d#5','e5','f5','f#5','g5','g#5','a5','a#5','b5','c6']
+        self.notefreqs=[130.81,138.59,146.83,155.56,164.81,174.61,185.00,196.00,207.65,220.00,233.08,246.94]
+        self.octavemultiplier=[1, 2, 3]
+        self.bongo1=r'Bongo1.wav'
+        self.bongo2=r'Bongo2.wav'
         self.signal=np.arange(1,10,1)
         self.new_sig=np.array([5])
         self.frequency_interval=1
@@ -255,7 +239,8 @@ class UI(QMainWindow):
     
     def SetIndex(self, Gindex):
         self.NoteIndex = Gindex
-        
+
+########## Setting Note length to pass it to the instrument ############
     def Get_NoteLength(self):
         self.LetRing = self.LetRingCheckBox.isChecked()
         self.SustainOn = self.PianoSustain.isChecked()
@@ -270,24 +255,25 @@ class UI(QMainWindow):
             self.Piano_NoteLength = 4
 
 
-
+    ####### Playing the Chosen Note ###########
     def Read_and_Play(self):
         filename = r'CurrentNote.wav'
         data, fs = sf.read(filename, dtype='float32')  
         sd.play(data, fs)
 
-
+    ############## Playing the Guitar ################
     def PlayGuitarNote(self):
         self.Get_NoteLength()
-        CurrentTuning = self.Tunings[self.TuningCombo.currentIndex()]
-        CurrentNote = ((CurrentTuning[self.NoteIndex],self.Guitar_NoteLength),)
+        CurrentTuning = self.Tunings[self.TuningCombo.currentIndex()] #getting index of the tuning array
+        CurrentNote = ((CurrentTuning[self.NoteIndex],self.Guitar_NoteLength),) #getting the Note
         guitar.make_wav(CurrentNote, fn = r"CurrentNote.wav")
         self.Read_and_Play()
     
+    ######### Playing the Piano ############
     def PlayPianoNote(self):
         self.Get_NoteLength()
-        PianoType=self.PianoTypeCombo.currentIndex()
-        CurrentNote = ((self.pianonotenames[self.NoteIndex],self.Piano_NoteLength),)
+        PianoType=self.PianoTypeCombo.currentIndex()  #getting index of the type array
+        CurrentNote = ((self.pianonotenames[self.NoteIndex],self.Piano_NoteLength),) #getting the Note
         if PianoType == 0:
             epiano.make_wav(CurrentNote, fn = r"CurrentNote.wav")
         elif PianoType == 1:
@@ -316,6 +302,7 @@ class UI(QMainWindow):
         stream.close()
         p.terminate()
     
+    ############ Playing Bongo ############
     def BongoPlayer(self, index):
         global bongodata
         global bongofs
@@ -325,14 +312,18 @@ class UI(QMainWindow):
             bongodata, bongofs = sf.read(self.bongo2, dtype='float32')
         sd.play(bongodata, bongofs)
     
-    def Equalizer(self,low, high, gain):    
+    ###### EQUALIZER FUNCTION #######
+    def Equalizer(self,low, high, gain): 
+        # if condition to retrieve the normal state   
         if self.Drums_horizontalSlider.value() == 1 & self.Guitar_horizontalSlider.value() == 1 & self.Piano_horizontalSlider.value() == 1: 
             self.signal=self.backup
         Num= len(self.signal)
+        # fourier transform 
         self.signal_rfft_Coeff_abs = np.fft.rfft(self.signal)
         self.frequencies = np.fft.rfftfreq(Num, 1 / self.samplerate)
         self.frequency_interval = len(self.frequencies) / (self.samplerate / 2)
         temp=0
+        # Loop to get the frequency range to get the instrument and then putting the gain
         for f in self.frequencies:
             if low < f < high:
                 temp=int(self.frequency_interval * f)
@@ -341,10 +332,12 @@ class UI(QMainWindow):
                 pass
         print(self.new_sig)
         print(np.fft.irfft(self.signal_rfft_Coeff_abs))
+        #inverse fourier
         self.new_sig = np.fft.irfft(self.signal_rfft_Coeff_abs)
         self.signal=np.int16(self.new_sig)
         self.Spectrogram()
 
+  ##### Setting instruments' Gain sliders ########
     def gain_sliders(self , Slider ) :
         Slider.setSingleStep(1)
         Slider.setValue(1)
@@ -352,8 +345,9 @@ class UI(QMainWindow):
         Slider.setMaximum(10)
         return Slider.value()
 
+
+    ################# Browse ######################
     def BrowseFiles(self):
-        
         global file_name
         file_name=QFileDialog.getOpenFileName(None, str("Browse Files"), None, str("Audio Files (*.wav)"))
         raw = wave.open(file_name[0])
