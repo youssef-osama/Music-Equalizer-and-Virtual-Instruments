@@ -6,6 +6,11 @@ import sys
 from ast import Break
 import wave
 import matplotlib
+import sys
+from msilib.schema import Class
+from tkinter import Label
+from PyQt5.QtWidgets import QMessageBox, QMainWindow, QApplication, QFileDialog
+from PyQt5 import uic, QtGui, QtCore
 from matplotlib.axis import YAxis
 from scipy import signal
 from ctypes import cast, POINTER
@@ -37,71 +42,16 @@ def exit_handler():
         os.remove(r'CurrentNote.wav')
         os.remove(r'TempSpec.png')
 atexit.register(exit_handler)
-
-
 class UI(QMainWindow):
     def __init__(self):
         super(UI, self).__init__()
-        uic.loadUi(r"task3Test555.ui", self)
         ############################################### LOAD UI ####################################################
-        self.label.setStyleSheet("image: url(:/newPrefix/orange-piano-icon.png);")
-        self.label_2.setStyleSheet("image: url(:/newPrefix/guitar-icon-png-7.png);")
-        icon = QtGui.QIcon()
-        icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(":/newPrefix/play-icon-11-256.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        icon.addPixmap(QtGui.QPixmap("Places-folder-orange-icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        icon2 = QtGui.QIcon()
-        self.Browse_pushbutton.setIcon(icon)
-        icon2.addPixmap(QtGui.QPixmap(":/newPrefix/R (6).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        icon3 = QtGui.QIcon()
-        icon3.addPixmap(QtGui.QPixmap(":/newPrefix/pause-icon-11-256.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.Pause_pushButton.setIcon(icon3)
-        icon4 = QtGui.QIcon()
-        icon4.addPixmap(QtGui.QPixmap("R (3).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.tabWidget.addTab(self.Music, icon4, "Music")
-        
-        self.LetRingCheckBox = QtWidgets.QCheckBox(self.tab_3)
-        self.LetRingCheckBox.setGeometry(QtCore.QRect(1100,120,70,25))
-        self.LetRingCheckBox.setText('Let Ring')
-        self.TuningLabel = QtWidgets.QLabel(self.tab_3)
-        self.TuningLabel.setText('Tuning:')
-        self.TuningLabel.setGeometry(QtCore.QRect(1100, 200, 70, 25))
-        self.TuningCombo = QtWidgets.QComboBox(self.tab_3)
-        self.TuningCombo.setGeometry(QtCore.QRect(1100, 270, 140, 35))
-        self.TuningCombo.addItem("Standard")
-        self.TuningCombo.addItem("Drop D")
-        self.TuningCombo.addItem("G Blues")
-        #icon5 = QtGui.QIcon()
-        #icon5.addPixmap(QtGui.QPixmap("R (10).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        #self.tabWidget_2.addTab(self.widget, icon5, "")
-        icon5 = QtGui.QIcon()
-        icon5.addPixmap(QtGui.QPixmap("R (10).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.tabWidget_2.addTab(self.widget, icon5, "Bongos")
-        #self.label_7.setStyleSheet("image: url(:/newPrefix/screen-3.webp);")
-        #self.label_7.setText("")
-        #self.label_7.setPixmap(QtGui.QPixmap(":/newPrefix/screen-3.webp"))
-        #self.label_7.setScaledContents(True)
-        #self.label_7.setObjectName("label_7")
-        icon6 = QtGui.QIcon()
-        icon6.addPixmap(QtGui.QPixmap("R (8).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.tabWidget_2.addTab(self.tab_2, icon6, "Piano")
-        #self.label_3.setStyleSheet("image: url(:/newPrefix/front-Horizontal-1.png);")
-        #self.label_3.setText("")
-        #self.label_3.setObjectName("label_3")
-        icon7 = QtGui.QIcon()
-        icon7.addPixmap(QtGui.QPixmap("R (9).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.tabWidget_2.addTab(self.tab_3, icon7, "Guitar")
-        icon8 = QtGui.QIcon()
-        icon8.addPixmap(QtGui.QPixmap("002_051_sound_wave_sine_synth_music-128.webp"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.sine.setIcon(icon8)
-        icon9 = QtGui.QIcon()
-        icon9.addPixmap(QtGui.QPixmap("002_054_sound_wave_square_synth_music-512.webp"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.radioButton_2.setIcon(icon9)
-        icon10 = QtGui.QIcon()
-        icon10.addPixmap(QtGui.QPixmap("R (4).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.tabWidget.addTab(self.instruments, icon10, "Instruments")
-        self.tabWidget_2.addTab(self.tab, icon8, "Synthesizer")
         self.timer=QtCore.QTimer()
+        self.int=0
+        self.scaling_factor= 4410
+        self.scaling_factor_i= 0
+        self.counter = 0
+        self.zoom = 1
         self.int=0
         self.scaling_factor= 4410
         self.scaling_factor_i= 0
@@ -122,40 +72,15 @@ class UI(QMainWindow):
         self.octavemultiplier=[1, 2, 3]
         self.bongo1=r'Bongo1.wav'
         self.bongo2=r'Bongo2.wav'
-        ##
-        self.PianoTypeCombo =QtWidgets.QComboBox(self.tab_2)
-        self.PianoTypeCombo.setGeometry(QtCore.QRect(670, 60, 270,40 ))
-        self.PianoTypeCombo.addItem("Electric Piano")
-        self.PianoTypeCombo.addItem("Grand Piano")
-        self.PianoTypeCombo.addItem("Toy Piano")
-        self.PianoSustain= QtWidgets.QCheckBox(self.tab_2)
-        self.PianoSustain.setGeometry(QtCore.QRect(670, 90, 270, 40))
-        self.PianoSustain.setText("Sustain")
-        #self.PianoTypeCombo.setItemText(0, _translate("MainWindow", "Electric Piano"))
-        #self.PianoTypeCombo.setItemText(1, _translate("MainWindow", "Grand Piano"))
-        #self.PianoTypeCombo.setItemText(2, _translate("MainWindow", "Toy Piano"))
-        self.Notes_comboBox = QtWidgets.QComboBox(self.tab)
-        self.Notes_comboBox.setObjectName("Notes_comboBox")
-        self.Notes_comboBox.addItem("C")
-        self.Notes_comboBox.addItem("C#")
-        self.Notes_comboBox.addItem("D")
-        self.Notes_comboBox.addItem("D#")
-        self.Notes_comboBox.addItem("E")
-        self.Notes_comboBox.addItem("F")
-        self.Notes_comboBox.addItem("F#")
-        self.Notes_comboBox.addItem("G")
-        self.Notes_comboBox.addItem("G#")
-        self.Notes_comboBox.addItem("A")
-        self.Notes_comboBox.addItem("A#")
-        self.Notes_comboBox.addItem("B")
-        self.comboBox_2.addItem("3rd Octave")
-        self.comboBox_2.addItem("4th Octave")
-        self.comboBox_2.addItem("5th Octave")
-        self.gridLayout_8.addWidget(self.Notes_comboBox, 0, 0, 1, 1)
+        uic.loadUi(r"TASK3TEST4.ui", self)
+        self.horizontalSlider = QtWidgets.QSlider(self.tab)
+        self.horizontalSlider.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontalSlider.setObjectName("horizontalSlider")
+        self.gridLayout_8.addWidget(self.horizontalSlider, 1, 0, 1, 2)
+        
+        self.gridLayout_2.addWidget(self.tabWidget_2, 0, 0, 1, 1)
         self.horizontalSlider.setMaximum(10)
         self.horizontalSlider.setMinimum(1)
-
-        #########################   GUITAR CONNECTIONS   ######################
         self.GuitarE_pushbutton.clicked.connect(lambda: self.SetIndex(0))
         self.GuitarE_pushbutton.clicked.connect(self.PlayGuitarNote)
         self.GuitarA_pushbutton.clicked.connect(lambda: self.SetIndex(1))
@@ -208,11 +133,9 @@ class UI(QMainWindow):
         self.Drums_pushButton2.clicked.connect(lambda: self.BongoPlayer(1))
         ########################## EQ Connections ############################
         self.Browse_pushbutton.clicked.connect(self.BrowseFiles)
-        self.actionFile.triggered.connect(self.BrowseFiles)
         self.Play_pushButton.clicked.connect(self.Play)
         self.Pause_pushButton.clicked.connect(self.Pause)
         self.Stop_pushButton.clicked.connect(self.Stop)
-
         self.Volume_horizontalSlider.valueChanged.connect(self.ChangeSystemVolume)
         self.signal=np.arange(1,10,1)
         self.new_sig=np.array([5])
@@ -231,14 +154,70 @@ class UI(QMainWindow):
         self.Piano_horizontalSlider.sliderReleased.connect(lambda:self.Equalizer(250,1290,self.Piano_horizontalSlider.value()))
         self.gain_sliders(self.Guitar_horizontalSlider)
         self.Guitar_horizontalSlider.sliderReleased.connect(lambda:self.Equalizer(1300,5190,self.Guitar_horizontalSlider.value()))
+        #self.Volume_horizontalSlider.sliderReleased.connect(self.SeekbarSetter)
         self.Volume_horizontalSlider.setMaximum(99)
-        self.Spectrogram_widget = pyqtgraph.PlotWidget(self.Spectrogram_groupBox)
-        self.gridLayout_7.addWidget(self.Spectrogram_widget, 0, 0, 1, 1)
-        self.gridLayout_3.addWidget(self.Spectrogram_groupBox, 0, 1, 1, 1)
-        self.show()
-      
+        self.label = QtWidgets.QLabel(self.Frequency_groupBox)
+        self.label.setMinimumSize(QtCore.QSize(30, 30))
+        self.label.setStyleSheet("image: url(:/newPrefix/orange-piano-icon.png);")
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
+        self.label_2 = QtWidgets.QLabel(self.Frequency_groupBox)
+        self.label_2.setMinimumSize(QtCore.QSize(30, 30))
+        self.label_2.setStyleSheet("image: url(:/newPrefix/guitar-icon-png-7.png);")
+        self.label_2.setText("")
+        self.label_2.setObjectName("label_2")
+        self.gridLayout.addWidget(self.label_2, 1, 0, 1, 1)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("Places-folder-orange-icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.Browse_pushbutton.setIcon(icon)
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/newPrefix/play-icon-11-256.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.Play_pushButton.setIcon(icon1)
+        self.label_6 = QtWidgets.QLabel(self.groupBox_4)
+        self.label_6.setStyleSheet("image: url(:/newPrefix/speaker-icon-15.png);")
+        self.label_6.setText("")
+        self.label_6.setObjectName("label_6")
+        self.gridLayout_5.addWidget(self.label_6, 2, 0, 1, 1)
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/newPrefix/R (6).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.Stop_pushButton.setIcon(icon2)
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/newPrefix/pause-icon-11-256.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.Pause_pushButton.setIcon(icon3)
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap("R (3).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.tabWidget.addTab(self.Music, icon4, "")
         
-    def Spectrogram(self):
+      
+        icon5 = QtGui.QIcon()
+        icon5.addPixmap(QtGui.QPixmap("R (10).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.tabWidget_2.addTab(self.widget, icon5, "")
+        self.label_7.setStyleSheet("image: url(:/newPrefix/screen-3.webp);")
+        self.label_7.setText("")
+        self.label_7.setPixmap(QtGui.QPixmap(":/newPrefix/screen-3.webp"))
+        self.label_7.setScaledContents(True)
+        self.label_7.setObjectName("label_7")
+        icon6 = QtGui.QIcon()
+        icon6.addPixmap(QtGui.QPixmap("R (8).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.tabWidget_2.addTab(self.tab_2, icon6, "")
+        self.label_3.setStyleSheet("image: url(:/newPrefix/front-Horizontal-1.png);")
+        self.label_3.setText("")
+        self.label_3.setObjectName("label_3")
+        icon7 = QtGui.QIcon()
+        icon7.addPixmap(QtGui.QPixmap("R (9).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.tabWidget_2.addTab(self.tab_3, icon7, "")
+        icon8 = QtGui.QIcon()
+        icon8.addPixmap(QtGui.QPixmap("002_051_sound_wave_sine_synth_music-128.webp"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap("002_054_sound_wave_square_synth_music-512.webp"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.radioButton_2.setIcon(icon9)
+        icon10 = QtGui.QIcon()
+        icon10.addPixmap(QtGui.QPixmap("R (4).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.tabWidget.addTab(self.instruments, icon10, "")
+        self.tabWidget_2.addTab(self.tab, icon8, "")
+        self.show()
+    def Spectrogram(self):    
         self.Spectrogram_widget.clear()
         plot.subplot(212)
         plot.figure(figsize=(6,3))
@@ -248,6 +227,8 @@ class UI(QMainWindow):
         plot.ylabel('Frequency')
         plot.axis('off')
         plot.savefig(r'TempSpec.png')
+        # self.Spectrogram_widget.getPlotItem().hideAxis('bottom')
+        # self.Spectrogram_widget.getPlotItem().hideAxis('left')
         self.Spectrogram_widget.setXRange(75, 540)
         img = pyqtgraph.QtGui.QGraphicsPixmapItem(pyqtgraph.QtGui.QPixmap(r'TempSpec.png'))
         img.scale(1,-1)
@@ -255,46 +236,39 @@ class UI(QMainWindow):
     
     def SetIndex(self, Gindex):
         self.NoteIndex = Gindex
-        
-    def Get_NoteLength(self):
-        self.LetRing = self.LetRingCheckBox.isChecked()
-        self.SustainOn = self.PianoSustain.isChecked()
-        if self.LetRing:
-            self.Guitar_NoteLength = 1
+
+    def PlayGuitarNote(self):
+        LetRing = self.LetRingCheckBox.isChecked()
+        global NoteLength
+        if LetRing:
+            NoteLength = 1
         else:
-            self.Guitar_NoteLength = 4
-
-        if self.SustainOn:
-            self.Piano_NoteLength = 1
-        else:
-            self.Piano_NoteLength = 4
-
-
-
-    def Read_and_Play(self):
+            NoteLength = 4
+        CurrentTuning = self.Tunings[self.TuningCombo.currentIndex()]
+        CurrentNote = ((CurrentTuning[self.NoteIndex],NoteLength),)
+        guitar.make_wav(CurrentNote, fn = r"CurrentNote.wav")
         filename = r'CurrentNote.wav'
         data, fs = sf.read(filename, dtype='float32')  
         sd.play(data, fs)
-
-
-    def PlayGuitarNote(self):
-        self.Get_NoteLength()
-        CurrentTuning = self.Tunings[self.TuningCombo.currentIndex()]
-        CurrentNote = ((CurrentTuning[self.NoteIndex],self.Guitar_NoteLength),)
-        guitar.make_wav(CurrentNote, fn = r"CurrentNote.wav")
-        self.Read_and_Play()
     
     def PlayPianoNote(self):
-        self.Get_NoteLength()
+        SustainOn = self.PianoSustain.isChecked()
+        global NoteLength
+        if SustainOn:
+            NoteLength = 1
+        else:
+            NoteLength = 4
         PianoType=self.PianoTypeCombo.currentIndex()
-        CurrentNote = ((self.pianonotenames[self.NoteIndex],self.Piano_NoteLength),)
+        CurrentNote = ((self.pianonotenames[self.NoteIndex],NoteLength),)
         if PianoType == 0:
             epiano.make_wav(CurrentNote, fn = r"CurrentNote.wav")
         elif PianoType == 1:
             grandpiano.make_wav(CurrentNote, fn = r"CurrentNote.wav")
         else:
             toypiano.make_wav(CurrentNote, fn = r"CurrentNote.wav")
-        self.Read_and_Play()
+        filename = r'CurrentNote.wav'
+        data, fs = sf.read(filename, dtype='float32')  
+        sd.play(data, fs)
 
     def Synthesizer(self):
         noteindex = self.Notes_comboBox.currentIndex()
@@ -356,11 +330,14 @@ class UI(QMainWindow):
         
         global file_name
         file_name=QFileDialog.getOpenFileName(None, str("Browse Files"), None, str("Audio Files (*.wav)"))
+        #global wave_object
+        #wave_object = sa.WaveObject.from_wave_file(file_name[0])
         raw = wave.open(file_name[0])
         self.signal = raw.readframes(-1)
         self.signal = np.frombuffer(self.signal, dtype ="int16")
         self.backup = self.signal
         self.frame_rate = raw.getframerate()
+        #print(self.frame_rate)
         print(len(self.signal))
         time = np.linspace( 0,len(self.signal) / self.frame_rate,num = len(self.signal))
         global x_axis_final
@@ -396,11 +373,15 @@ class UI(QMainWindow):
         self.scaling_factor= 4410
         self.scaling_factor_i= 0
         self.counter = 0
+        # self.zoom = 1
+        # self.fin = 700
+        # self.size=0
         self.paused=False
         self.seeker=0
 
     def Pause(self):
         self.timer.stop()
+        #play_object.pause()
         sd.stop()
         self.paused=True
         self.isplayed=False
@@ -411,6 +392,7 @@ class UI(QMainWindow):
             return
         else:
             if self.paused==True:
+                #play_object.resume()
                 sd.play(self.signal[self.seeker:-1], self.frame_rate)
                 self.timer.start()
                 self.isplayed=True
@@ -422,8 +404,10 @@ class UI(QMainWindow):
                 self.timer.setInterval(100)
                 self.timer.timeout.connect(self.update_plot)
                 self.timer.timeout.connect(self.seek)
+                #self.timer.timeout.connect(self.Seekbar)
                 self.timer.start()
                 sd.play(self.signal[self.seeker:-1], self.frame_rate)
+                #play_object = wave_object.play()
                 self.Spectrogram()
 
     def seek(self):
@@ -433,10 +417,22 @@ class UI(QMainWindow):
         self.timer.stop()
         self.MainGraph_widget.clear()
         self.Spectrogram_widget.clear()
+        #play_object.stop()
         sd.stop()
         self.seeker=0
         self.paused=False
         self.isplayed=False
+
+    # def Seekbar(self):
+    #     self.currentlocation = int(self.seeker/len(self.signal))
+    #     #print(self.currentlocation)
+    #     self.Volume_horizontalSlider.setValue(self.currentlocation)
+    
+    # def SeekbarSetter(self):
+    #     self.location = self.Volume_horizontalSlider.value()
+    #     print(self.location)
+    #     if self.paused:
+    #         self.seeker = int((self.location*len(self.signal))/100)
 
     def ChangeSystemVolume(self):
         Slider = int(self.Volume_horizontalSlider.value())
@@ -444,11 +440,6 @@ class UI(QMainWindow):
         interface2 = devices2.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
         volume2 = cast(interface2, POINTER(IAudioEndpointVolume))
         volume2.SetMasterVolumeLevel(self.volumearray[Slider], None)
-
-from pyqtgraph import PlotWidget
-import logo_rc
-
-
 app = QApplication(sys.argv)
 UIWindow = UI()
-app.exec_()
+app.exec_()            
