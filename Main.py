@@ -1,6 +1,4 @@
-from msilib.schema import Class
-from tkinter import Label
-from PyQt5.QtWidgets import QMessageBox, QMainWindow, QApplication, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog
 from PyQt5 import uic, QtGui, QtCore
 import sys
 from ast import Break
@@ -14,22 +12,17 @@ from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 from fileinput import filename
 from msilib.schema import RadioButton
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QIcon, QPixmap
 import pysynth_s as guitar
 import pysynth_e as epiano
 import pysynth_b as grandpiano
 import pysynth as toypiano
-import scipy 
 import soundfile as sf
 import sounddevice as sd
 import os
-#import simpleaudio as sa
-import time
 from PyQt5.QtWidgets import QFileDialog
 #import pyaudio
 import numpy as np
 import atexit
-from sympy import false
 import pyqtgraph
 import matplotlib.pyplot as plot
 
@@ -89,7 +82,6 @@ class UI(QMainWindow):
         icon10.addPixmap(QtGui.QPixmap("R (4).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.tabWidget.addTab(self.instruments, icon10, "Instruments")
         self.tabWidget_2.addTab(self.tab, icon8, "Synthesizer")
-        
         self.PianoTypeCombo =QtWidgets.QComboBox(self.tab_2)
         self.PianoTypeCombo.setGeometry(QtCore.QRect(670, 60, 270,40 ))
         self.PianoTypeCombo.addItem("Electric Piano")
@@ -177,6 +169,7 @@ class UI(QMainWindow):
         self.Pause_pushButton.clicked.connect(self.Pause)
         self.Stop_pushButton.clicked.connect(self.Stop)
         self.Volume_horizontalSlider.valueChanged.connect(self.ChangeSystemVolume)
+        ################### INITIALIZATIONS ######################
         self.timer=QtCore.QTimer()
         self.int=0
         self.scaling_factor= 4410
@@ -330,8 +323,6 @@ class UI(QMainWindow):
                 self.signal_rfft_Coeff_abs[temp] = self.signal_rfft_Coeff_abs[temp] * (gain/1.3)
             else:
                 pass
-        print(self.new_sig)
-        print(np.fft.irfft(self.signal_rfft_Coeff_abs))
         #inverse fourier
         self.new_sig = np.fft.irfft(self.signal_rfft_Coeff_abs)
         self.signal=np.int16(self.new_sig)
@@ -355,7 +346,6 @@ class UI(QMainWindow):
         self.signal = np.frombuffer(self.signal, dtype ="int16")
         self.backup = self.signal
         self.frame_rate = raw.getframerate()
-        print(len(self.signal))
         time = np.linspace( 0,len(self.signal) / self.frame_rate,num = len(self.signal))
         global x_axis_final
         global y_axis_final
@@ -385,6 +375,8 @@ class UI(QMainWindow):
             self.timer.stop()
             self.counter= 0
     
+
+    ######### Initialization of values used in Update plot ###########
     def Initialize(self):
         self.int=0
         self.scaling_factor= 4410
@@ -393,12 +385,15 @@ class UI(QMainWindow):
         self.paused=False
         self.seeker=0
 
+    ########## Pause Music ##################
     def Pause(self):
         self.timer.stop()
         sd.stop()
         self.paused=True
         self.isplayed=False
+    
 
+    ################# Play Music ##################
     def Play(self):
         global play_object
         if self.isplayed==True:
@@ -420,9 +415,13 @@ class UI(QMainWindow):
                 sd.play(self.signal[self.seeker:-1], self.frame_rate)
                 self.Spectrogram()
 
+
+    #################### Finding where the song stoped ########################
     def seek(self):
         self.seeker=int(self.seeker+(self.frame_rate/10))
+
     
+    #################### Stop the song ###################
     def Stop(self):
         self.timer.stop()
         self.MainGraph_widget.clear()
@@ -432,6 +431,8 @@ class UI(QMainWindow):
         self.paused=False
         self.isplayed=False
 
+
+    ######################## Controlling the music #######################
     def ChangeSystemVolume(self):
         Slider = int(self.Volume_horizontalSlider.value())
         devices2 = AudioUtilities.GetSpeakers()
