@@ -362,14 +362,14 @@ class UI(QMainWindow):
         self.MainGraph_widget.setYRange(np.min(self.signal),np.max(self.signal))
         self.MainGraph_widget.clear()
         if self.counter == 0 :
-            self.MainGraph_widget.setXRange(0, self.scaling_factor)
+            self.MainGraph_widget.setXRange(0, self.scaling_factor/44100)
         elif self.counter >= 4410:
-            self.MainGraph_widget.setXRange(self.scaling_factor_i, self.scaling_factor)
+            self.MainGraph_widget.setXRange(self.scaling_factor_i/44100, self.scaling_factor/44100)
             self.scaling_factor = self.scaling_factor + 4410 
             self.scaling_factor_i = self.scaling_factor_i + 4410
         elif self.size > 0:
             self.MainGraph_widget.setXRange((self.int + self.size) , (self.fin +self.size))
-        self.plt = self.MainGraph_widget.plot(x_axis_final[0:self.counter], y_axis_final[0:self.counter], pen=(255,140,0))
+        self.plt = self.MainGraph_widget.plot(x_axis_final[0:self.counter]/44100, y_axis_final[0:self.counter], pen=(255,140,0))
         self.counter = self.counter + 4410
         if self.counter > np.max(x_axis_final):
             self.timer.stop()
